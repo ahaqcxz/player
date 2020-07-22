@@ -1,0 +1,199 @@
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+      <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
+
+    <link rel="stylesheet" href="DPlayer.min.css">
+    <script src="hls.js"></script>
+    <script src="flv.js"></script>
+    <script src="DPlayer.min.js"></script>
+    <script src="md5.js"></script>
+    <script src="base64.js"></script>
+    <script src="jquery.min.js"></script>
+    <style>
+    html,
+    body {
+        overflow: hidden;
+        margin: 0;
+        height: 100%
+    }
+
+    .container {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: #000;
+        filter: alpha(opacity=0)
+    }
+    </style>
+</head>
+
+<body>
+    <div id="zezao"></div>
+    <div id="dplayer" style="z-index: -1">
+    </div>
+    <script>
+function getParentUrl() { 
+   var url = null;
+ var url='';
+try { 
+    url = window.top.document.referrer ; 
+} catch(M) { 
+    if (window.parent) { 
+      try { 
+        url = window.parent.document.referrer;
+      } catch(L) { 
+        url = "";
+      } 
+    } 
+} 
+if (url === "") { 
+    url = document.referrer;
+}
+  url=url.split('/');
+  url=url[2];
+url=url.split('.');
+  url=url.slice(-2)[0];
+     return url;
+
+  
+}
+
+    var domain = getParentUrl() ;
+    var zegai = "<div class='container' id='cont' ><br><br><p style=' text-align:center; line-height: 300%; margin: 0 5 0 5px;'><font color='#00FFFF' style='font-size: 24px'>" + domain + "&nbsp视频解析</font></p><p style='text-align:center;line-height: 300%; margin: 0 5 0 5px;'><font style='font-size: 24px' color='#FFFFFF'>视频正在努力加载中....</font></p><hr color='#00FF00' width='100%' style='height:0px;margin:20px 0 20px' /><p style='text-align:center;line-height: 300%; margin: 0 5 0 5px;'><font color='#00FFFF' style='font-size: 19px'><u>- 使 用 方 法 -</u></font></p><p style=' text-align:center;margin:10px;'><font color='#CCFF99' style='font-size: 14px'>播放失败点击左上角切换，系统自动优选可用源，可用率越高解析越靠前。</font></p><p style=' text-align:center;margin:10px;'><font color='#CCFF99' style='font-size: 14px'>本解析仅搜集网络解析源，自身并不存储播放资源！！</font></p></div>";
+    document.getElementById("zezao").innerHTML = zegai;
+
+    function hidden() {
+        var zezaodiv = document.getElementById("zezao");
+        zezaodiv.innerHTML = "";
+        document.getElementById("dplayer").style.zIndex = 1;
+    }
+
+    function GetQueryString(key) {
+        // 获取参数
+        var url = window.location.search;
+        // 正则筛选地址栏
+        var reg = new RegExp("(^|&)" + key + "=([^&]*)(&|$)");
+        // 匹配目标参数
+        var result = url.substr(1).match(reg);
+        //返回参数值
+        return result ? decodeURIComponent(result[2]) : null;
+    }
+    var url = GetQueryString("url");
+
+    if (url.indexOf('m3u8') >= 0 )
+
+    { dplayer(url); } else if (url.indexOf('mgtv.com') >= 0) { location = "//https://v.canzhisong.cn/k.php?url="+url;
+}
+      else if (url.indexOf('mp4') >= 0) { location = "//https://jx.joy520.cn/xg/xg.php?url="+url;
+} 
+      
+      
+      else {
+        let random = Math.floor(Math.random() * 10) + 1
+        $.ajax({
+            url: 'https://api.xiaoc.eu.org/',
+            data: {
+                t:random,
+                url: url
+            },
+
+            timeout: 10000,
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                if (data.msg == 'ok' || data.msg == '1') {
+                    var base64 = BASE64.decode(data.url);
+                    if (data.type == "m3u8" || data.type == "hls") {
+                        dplayer(base64);
+                    } else if (data.type == "mp4") {
+                        dplayer(base64);
+                    } else if (data.type == "json") {
+                        $.ajax({
+                            url: base64,
+                            dataType: "json",
+
+
+                            success: function(result) {
+                                var json = JSON.parse(result.vinfo);
+                                dplayer(json.vl.vi[0].ul.ui[0].url + json.vl.vi[0].fn + '?vkey=' + json.vl.vi[0].fvkey)
+                            }
+                        });
+                    } else {
+                        dplayer(base64);
+                    }
+                } else {
+                   location = "https://cn.bjbanshan.cn/jiexi.php?url=" + url;
+                }
+            },
+            error: function() {
+
+                location.reload()
+
+                // alert("接口异常！")
+            }
+
+        });
+    }
+
+    function dplayer(url) {
+
+        window.setTimeout(hidden, 3600);
+        const dpMain = new DPlayer({
+            container: document.getElementById('dplayer'),
+            screenshot: true, // 开启截图，如果开启，视频和视频封面需要开启跨域
+            lang: 'zh-cn', // 可选值: 'en', 'zh-cn', 'zh-tw'
+            autoplay: true, // 视频自动播放
+            theme: '#d28af4', // 主题色
+            preload: 'auto', // 预加载，可选值: 'none', 'metadata', 'auto'
+            volume: '0.7', // 默认音量，请注意播放器会记忆用户设置，用户手动设置音量后默认音量即失效
+            loop: false, // 视频循环播放
+            hotkey: true,
+
+            logo: 'logo.png',
+            screenshot: false,
+            mutex: true, // 互斥，阻止多个播放器同时播放，当前播放器播放时暂停其他播放器
+            video: {
+                url: url,
+
+
+
+
+                //  quality: [{
+                // name: '标清',
+                // url: u,
+                // },{
+                //  name: '超清',
+                //    url: u
+                // }],
+                // defaultQuality: 1,
+                pic: 'https://cbu01.alicdn.com/img/ibank/2019/694/265/11144562496.jpg',
+                type: 'auto'
+            },
+            contextmenu: [
+                // {
+                // text: 'custom1',
+                // link: 'https://github.com/DIYgod/DPlayer',
+                // },
+                // {
+                //  text: 'custom2',
+                // click: (player) => {
+                //     console.log(player);
+                //  },
+                // },
+            ],
+
+           
+        });
+
+    };
+    </script>
+    <div style="display:none;">
+        <!-- 想要添加统计代码，可以放在下面空行内 -->
+        <script src="https://s19.cnzz.com/z_stat.php?id=1271919628&web_id=1271919628" language="JavaScript"></script>
+    </div>
+    <!-- 想要添加接口广告，可以放在下面空行内 -->
+</body>
+
+</html>
